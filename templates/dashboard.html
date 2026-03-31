@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ZoomAuto — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#07080d;
+  --s1:#0e0f17;
+  --s2:#13141e;
+  --s3:#1a1b28;
+  --border:rgba(255,255,255,0.06);
+  --border2:rgba(255,255,255,0.1);
+  --blue:#3d7fff;
+  --blue2:#6fa3ff;
+  --purple:#8b5cf6;
+  --green:#22d3a5;
+  --red:#ff5470;
+  --yellow:#f59e0b;
+  --text:#eef0f8;
+  --muted:#5a5d72;
+  --muted2:#8b8fa8;
+  --font:'Outfit',sans-serif;
+  --mono:'JetBrains Mono',monospace;
+}
+
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  opacity:0.4;
+}
+
+.orbs{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.orb{position:absolute;border-radius:50%;filter:blur(120px);animation:orbDrift 20s ease-in-out infinite alternate}
+.orb-a{width:700px;height:700px;background:radial-gradient(circle,rgba(61,127,255,0.12),transparent 70%);top:-200px;left:-150px}
+.orb-b{width:500px;height:500px;background:radial-gradient(circle,rgba(139,92,246,0.1),transparent 70%);bottom:-100px;right:-100px;animation-delay:-10s;animation-duration:17s}
+.orb-c{width:300px;height:300px;background:radial-gradient(circle,rgba(34,211,165,0.08),transparent 70%);top:40%;left:60%;animation-delay:-5s;animation-duration:23s}
+@keyframes orbDrift{from{transform:translate(0,0) scale(1)}to{transform:translate(50px,-60px) scale(1.1)}}
+
+.app{position:relative;z-index:1;display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+@media(max-width:900px){.app{grid-template-columns:1fr;grid-template-rows:auto 1fr}}
+
+/* SIDEBAR */
+.sidebar{
+  background:var(--s1);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;position:sticky;top:0;height:100vh;
+  padding:24px 0;
+}
+@media(max-width:900px){.sidebar{height:auto;position:static;border-right:none;border-bottom:1px solid var(--border);padding:14px 20px;flex-direction:row;align-items:center;justify-content:space-between}}
+
+.logo{padding:0 24px 28px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border)}
+@media(max-width:900px){.logo{padding:0;border:none}}
+.logo-icon{width:38px;height:38px;border-radius:10px;flex-shrink:0;background:linear-gradient(135deg,var(--blue),var(--purple));display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 4px 16px rgba(61,127,255,0.3)}
+.logo-text{font-size:18px;font-weight:800;letter-spacing:-0.02em}
+.logo-text span{color:var(--blue2)}
+
+.nav{flex:1;padding:20px 12px 0;display:flex;flex-direction:column;gap:2px}
+@media(max-width:900px){.nav{flex-direction:row;padding:0;gap:4px}}
+.nav-item{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:10px;cursor:pointer;font-size:14px;font-weight:500;color:var(--muted2);border:1px solid transparent;transition:all 0.2s;user-select:none}
+.nav-item:hover{background:var(--s2);color:var(--text)}
+.nav-item.active{background:rgba(61,127,255,0.1);color:var(--blue2);border-color:rgba(61,127,255,0.2)}
+.nav-icon{font-size:16px;width:20px;text-align:center}
+@media(max-width:900px){.nav-item span.nav-lbl{display:none}}
+
+.sidebar-footer{padding:16px 12px 0;border-top:1px solid var(--border);margin-top:auto}
+@media(max-width:900px){.sidebar-footer{border:none;margin:0;padding:0}}
+.user-card{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--s2);border:1px solid var(--border);border-radius:12px}
+.user-av{width:34px;height:34px;border-radius:8px;flex-shrink:0;background:linear-gradient(135deg,var(--blue),var(--purple));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px}
+.user-name{font-size:13px;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.logout-ico{font-size:18px;cursor:pointer;color:var(--muted);transition:color 0.2s;flex-shrink:0;line-height:1}
+.logout-ico:hover{color:var(--red)}
+
+/* MAIN */
+.main{display:flex;flex-direction:column;min-height:0}
+.topbar{padding:18px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.page-title{font-size:19px;font-weight:700;letter-spacing:-0.02em}
+.page-sub{font-size:13px;color:var(--muted2);margin-top:2px}
+.live-pill{display:flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(34,211,165,0.08);border:1px solid rgba(34,211,165,0.2);border-radius:20px;font-size:12px;color:var(--green);font-weight:600}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 1.4s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:0.3}50%{opacity:1}}
+
+.content{flex:1;padding:22px 28px;overflow-y:auto;display:flex;flex-direction:column;gap:18px}
+.content::-webkit-scrollbar{width:4px}
+.content::-webkit-scrollbar-thumb{background:var(--s3);border-radius:2px}
+
+/* PAGES */
+.page{display:none;flex-direction:column;gap:18px;animation:pageIn 0.3s ease both}
+.page.active{display:flex}
+@keyframes pageIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* CARDS */
+.card{background:var(--s1);border:1px solid var(--border);border-radius:16px;padding:22px}
+.card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.card-title{font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px}
+
+.chip{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.chip-green{background:rgba(34,211,165,0.1);color:var(--green);border:1px solid rgba(34,211,165,0.2)}
+.chip-yellow{background:rgba(245,158,11,0.1);color:var(--yellow);border:1px solid rgba(245,158,11,0.2)}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:600px){.stats-row{grid-template-columns:1fr 1fr}}
+.stat-box{background:var(--s2);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center}
+.stat-val{font-size:30px;font-weight:800;font-family:var(--mono);letter-spacing:-0.03em}
+.stat-lbl{font-size:11px;color:var(--muted2);text-transform:uppercase;letter-spacing:0.08em;margin-top:4px}
+.stat-box.c-blue .stat-val{color:var(--blue2)}
+.stat-box.c-green .stat-val{color:var(--green)}
+.stat-box.c-yellow .stat-val{color:var(--yellow)}
+
+/* ZOOM HERO */
+.zoom-hero{
+  background:linear-gradient(135deg,rgba(61,127,255,0.05),rgba(139,92,246,0.05));
+  border:1px solid rgba(61,127,255,0.13);border-radius:16px;
+  padding:30px 24px;text-align:center;position:relative;overflow:hidden;
+}
+.zoom-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% -10%,rgba(61,127,255,0.07),transparent 65%);pointer-events:none}
+.zoom-ring{position:relative;display:inline-flex;align-items:center;justify-content:center;margin-bottom:18px}
+.zoom-ring::before,.zoom-ring::after{content:'';position:absolute;border-radius:50%;border:1px solid var(--ringC,rgba(61,127,255,0.3));animation:rp 2.5s ease-in-out infinite}
+.zoom-ring::before{width:88px;height:88px}
+.zoom-ring::after{width:110px;height:110px;animation-delay:0.6s;opacity:0.5}
+@keyframes rp{0%,100%{transform:scale(1);opacity:0.5}50%{transform:scale(1.15);opacity:0}}
+.zoom-circle{width:66px;height:66px;border-radius:50%;background:var(--circBg,rgba(61,127,255,0.1));border:2px solid var(--circBd,rgba(61,127,255,0.4));display:flex;align-items:center;justify-content:center;font-size:28px;position:relative;z-index:1;transition:all 0.4s}
+.zh-title{font-size:20px;font-weight:800;letter-spacing:-0.02em;margin-bottom:5px}
+.zh-sub{font-size:13px;color:var(--muted2)}
+.join-wrap{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:18px}
+.join-btn{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--green),#10b981);color:#fff;border:none;border-radius:11px;padding:11px 26px;font-family:var(--font);font-weight:700;font-size:14px;cursor:pointer;text-decoration:none;box-shadow:0 4px 20px rgba(34,211,165,0.35);transition:all 0.2s;animation:popIn 0.4s cubic-bezier(0.16,1,0.3,1)}
+.join-btn:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(34,211,165,0.45)}
+@keyframes popIn{from{transform:scale(0.8);opacity:0}to{transform:scale(1);opacity:1}}
+.timer-wrap{margin-top:18px}
+.timer-track{height:3px;background:rgba(255,255,255,0.05);border-radius:2px;overflow:hidden;margin-bottom:6px}
+.timer-bar{height:100%;background:linear-gradient(90deg,var(--blue),var(--purple));border-radius:2px;transition:width 1s linear}
+.timer-lbl{font-size:11px;color:var(--muted);font-family:var(--mono)}
+
+/* FORM */
+.field{margin-bottom:14px}
+.field label{display:block;font-size:11px;font-weight:600;color:var(--muted2);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:7px}
+.field input{width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border2);border-radius:10px;padding:11px 14px;color:var(--text);font-family:var(--font);font-size:14px;outline:none;transition:all 0.2s}
+.field input::placeholder{color:var(--muted)}
+.field input:focus{border-color:var(--blue);background:rgba(61,127,255,0.06);box-shadow:0 0 0 3px rgba(61,127,255,0.1)}
+.submit-btn{width:100%;padding:12px;border:none;border-radius:10px;background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff;font-family:var(--font);font-weight:700;font-size:14px;cursor:pointer;transition:all 0.2s;box-shadow:0 4px 16px rgba(61,127,255,0.25)}
+.submit-btn:hover{opacity:0.9;transform:translateY(-1px)}
+.submit-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none}
+.f-alert{padding:10px 12px;border-radius:8px;font-size:13px;display:none;align-items:center;gap:7px;margin-top:10px}
+.f-alert.err{background:rgba(255,84,112,0.08);border:1px solid rgba(255,84,112,0.2);color:var(--red);display:flex}
+.f-alert.ok{background:rgba(34,211,165,0.08);border:1px solid rgba(34,211,165,0.2);color:var(--green);display:flex}
+
+/* LESSON LIST */
+.lesson-list{display:flex;flex-direction:column;gap:9px}
+.lcard{display:flex;align-items:center;gap:13px;padding:13px 15px;background:var(--s2);border:1px solid var(--border);border-radius:12px;transition:border-color 0.2s,transform 0.15s;animation:fadeUp 0.3s ease both}
+.lcard:hover{border-color:rgba(61,127,255,0.22);transform:translateX(2px)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.lc-ico{width:40px;height:40px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:19px}
+.lc-ico.blue{background:rgba(61,127,255,0.1)}
+.lc-ico.green{background:rgba(34,211,165,0.1)}
+.lc-body{flex:1;min-width:0}
+.lc-name{font-size:14px;font-weight:600;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lc-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.lc-time{font-size:12px;color:var(--muted2);font-family:var(--mono)}
+.lc-link{font-size:12px;color:var(--blue2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px;text-decoration:none}
+.lc-link:hover{text-decoration:underline}
+
+.empty-state{text-align:center;padding:34px 20px;color:var(--muted)}
+.empty-icon{font-size:38px;margin-bottom:10px;opacity:0.5}
+.empty-txt{font-size:14px}
+.loading-row{text-align:center;padding:22px;font-size:13px;color:var(--muted2)}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.08);border-top-color:var(--blue);border-radius:50%;animation:spinA 0.7s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spinA{to{transform:rotate(360deg)}}
+
+.sec-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:10px}
+.refresh-btn{background:var(--s3);border:1px solid var(--border);color:var(--muted2);border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;font-family:var(--font);transition:all 0.2s}
+.refresh-btn:hover{color:var(--text);border-color:var(--border2)}
+</style>
+</head>
+<body>
+<div class="orbs">
+  <div class="orb orb-a"></div>
+  <div class="orb orb-b"></div>
+  <div class="orb orb-c"></div>
+</div>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">🎥</div>
+      <div class="logo-text">Zoom<span>Auto</span></div>
+    </div>
+    <nav class="nav">
+      <div class="nav-item active" onclick="goPage('home')">
+        <span class="nav-icon">🏠</span><span class="nav-lbl">Bosh sahifa</span>
+      </div>
+      <div class="nav-item" onclick="goPage('add')">
+        <span class="nav-icon">➕</span><span class="nav-lbl">Dars qo'shish</span>
+      </div>
+      <div class="nav-item" onclick="goPage('upcoming')">
+        <span class="nav-icon">📅</span><span class="nav-lbl">Kelayotgan darslar</span>
+      </div>
+      <div class="nav-item" onclick="goPage('history')">
+        <span class="nav-icon">🕐</span><span class="nav-lbl">Tarix</span>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-av" id="sideAv">U</div>
+        <div class="user-name" id="sideUser">User</div>
+        <div class="logout-ico" onclick="logout()" title="Chiqish">↩</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <div class="page-title" id="topTitle">Bosh sahifa</div>
+        <div class="page-sub" id="topSub">Zoom darslarini kuzating</div>
+      </div>
+      <div class="live-pill"><div class="live-dot"></div>Har 5s tekshiriladi</div>
+    </div>
+
+    <div class="content">
+
+      <!-- HOME -->
+      <div class="page active" id="page-home">
+        <div class="stats-row">
+          <div class="stat-box c-blue"><div class="stat-val" id="stTotal">—</div><div class="stat-lbl">Jami darslar</div></div>
+          <div class="stat-box c-green"><div class="stat-val" id="stDone">—</div><div class="stat-lbl">O'tkazilgan</div></div>
+          <div class="stat-box c-yellow"><div class="stat-val" id="stUpcoming">—</div><div class="stat-lbl">Kutilayotgan</div></div>
+        </div>
+
+        <div class="zoom-hero">
+          <div class="zoom-ring" id="zRing">
+            <div class="zoom-circle" id="zCircle">🔍</div>
+          </div>
+          <div class="zh-title" id="zTitle">Tekshirilmoqda...</div>
+          <div class="zh-sub" id="zSub">Server bilan bog'lanilmoqda</div>
+          <div class="join-wrap" id="joinWrap"></div>
+          <div class="timer-wrap">
+            <div class="timer-track"><div class="timer-bar" id="tBar" style="width:100%"></div></div>
+            <div class="timer-lbl">Keyingi tekshiruv: <span id="tSec">5</span>s</div>
+          </div>
+        </div>
+
+        <div>
+          <div class="sec-label">So'nggi o'tilgan darslar</div>
+          <div id="recentList" class="lesson-list">
+            <div class="loading-row"><span class="spin"></span>Yuklanmoqda...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ADD -->
+      <div class="page" id="page-add">
+        <div class="card" style="max-width:500px">
+          <div class="card-head">
+            <div class="card-title">➕ Yangi dars qo'shish</div>
+          </div>
+          <div class="field"><label>Dars nomi</label><input type="text" id="addName" placeholder="Masalan: Amaliy matematika"/></div>
+          <div class="field"><label>Boshlanish vaqti</label><input type="datetime-local" id="addTime"/></div>
+          <div class="field"><label>Zoom link</label><input type="url" id="addLink" placeholder="https://us05web.zoom.us/j/..."/></div>
+          <button class="submit-btn" id="addBtn" onclick="addLesson()">Dars Qo'shish</button>
+          <div class="f-alert" id="addAlert"><span id="addAIco"></span><span id="addAMsg"></span></div>
+        </div>
+      </div>
+
+      <!-- UPCOMING -->
+      <div class="page" id="page-upcoming">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">📅 Kelayotgan darslar</div>
+            <button class="refresh-btn" onclick="loadUpcoming()">🔄 Yangilash</button>
+          </div>
+          <div id="upcomingList" class="lesson-list">
+            <div class="loading-row"><span class="spin"></span>Yuklanmoqda...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HISTORY -->
+      <div class="page" id="page-history">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">🕐 O'tkazilgan darslar</div>
+            <button class="refresh-btn" onclick="loadHistory()">🔄 Yangilash</button>
+          </div>
+          <div id="historyList" class="lesson-list">
+            <div class="loading-row"><span class="spin"></span>Yuklanmoqda...</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const BASE = "http://127.0.0.1:8000";
+let timerInterval = null, timerSec = 5, autoOpened = false;
+
+// Auth guard
+if (!localStorage.getItem("access")) location.href = "login.html";
+const username = localStorage.getItem("username") || "User";
+document.getElementById("sideUser").textContent = username;
+document.getElementById("sideAv").textContent = username[0]?.toUpperCase() || "U";
+
+function logout(){ localStorage.clear(); location.href = "login.html"; }
+function authH(){ return {"Content-Type":"application/json","Authorization":"Bearer "+localStorage.getItem("access")} }
+
+// Navigation
+const pageMeta = {
+  home:    ["Bosh sahifa",        "Zoom darslarini kuzating"],
+  add:     ["Dars qo'shish",      "Yangi Zoom dars rejalashtiring"],
+  upcoming:["Kelayotgan darslar", "Hali boshlanmagan darslar"],
+  history: ["Tarix",              "O'tkazilgan darslar ro'yxati"],
+};
+function goPage(name){
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+  document.getElementById("page-"+name).classList.add("active");
+  const idx = {home:0,add:1,upcoming:2,history:3};
+  document.querySelectorAll(".nav-item")[idx[name]]?.classList.add("active");
+  document.getElementById("topTitle").textContent = pageMeta[name][0];
+  document.getElementById("topSub").textContent   = pageMeta[name][1];
+  if(name==="upcoming") loadUpcoming();
+  if(name==="history")  loadHistory();
+}
+
+// Zoom status
+async function checkZoom(){
+  try{
+    const res  = await fetch(`${BASE}/api/open/link/`, {headers:authH()});
+    const data = await res.json();
+    if(Array.isArray(data) && data.length && data[0].zoom_link){
+      setZoomUI("🟢","rgba(34,211,165,0.12)","rgba(34,211,165,0.4)","rgba(34,211,165,0.25)",
+        "Dars boshlandi!", data.map(d=>d.name||"Dars").join(", "));
+      const wrap = document.getElementById("joinWrap");
+      wrap.innerHTML = "";
+      data.forEach(d=>{
+        const a = Object.assign(document.createElement("a"),{
+          className:"join-btn", href:d.zoom_link, target:"_blank",
+          innerHTML:"🎥 "+(d.name||"Darsga Kirish")
+        });
+        wrap.appendChild(a);
+      });
+      if(!autoOpened){
+        autoOpened = true;
+        // Brauzer birinchi interaksiyasiz popup bloklamasligi uchun
+        // hidden iframe trick ishlatamiz
+        data.forEach((d, i) => {
+          setTimeout(() => {
+            const a = document.createElement("a");
+            a.href = d.zoom_link;
+            a.target = "_blank";
+            a.rel = "noopener";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+          }, i * 200);
+        });
+      }
+      // Polling davom etadi — boshqa darslar ham bo'lishi mumkin
+    } else {
+      setZoomUI("⏳","rgba(245,158,11,0.1)","rgba(245,158,11,0.35)","rgba(245,158,11,0.2)",
+        "Dars kutilmoqda","Hozircha faol Zoom dars yo'q");
+      document.getElementById("joinWrap").innerHTML = "";
+      autoOpened = false; // keyingi dars uchun reset
+    }
+  } catch(e){
+    setZoomUI("❌","rgba(255,84,112,0.1)","rgba(255,84,112,0.3)","rgba(255,84,112,0.15)",
+      "Xatolik","Server bilan bog'lanib bo'lmadi");
+  }
+}
+function setZoomUI(ico, bg, bd, ring, title, sub){
+  const c = document.getElementById("zCircle");
+  c.textContent = ico; c.style.background = bg; c.style.borderColor = bd;
+  document.getElementById("zRing").style.setProperty("--ringC", ring);
+  document.getElementById("zTitle").textContent = title;
+  document.getElementById("zSub").textContent   = sub;
+}
+function startTimer(){
+  timerSec = 5; clearInterval(timerInterval);
+  timerInterval = setInterval(()=>{
+    timerSec--;
+    document.getElementById("tSec").textContent = timerSec;
+    document.getElementById("tBar").style.width = (timerSec/5*100)+"%";
+    if(timerSec <= 0){ checkZoom(); timerSec=5; document.getElementById("tBar").style.width="100%"; }
+  }, 1000);
+}
+
+// Add lesson
+function fAlert(msg, type){
+  const el = document.getElementById("addAlert");
+  el.className = "f-alert "+type;
+  document.getElementById("addAIco").textContent = type==="err" ? "⚠ " : "✓ ";
+  document.getElementById("addAMsg").textContent = msg;
+}
+async function addLesson(){
+  document.getElementById("addAlert").className = "f-alert";
+  const name = document.getElementById("addName").value.trim();
+  const time = document.getElementById("addTime").value;
+  const link = document.getElementById("addLink").value.trim();
+  if(!name||!time||!link) return fAlert("Barcha maydonlarni to'ldiring","err");
+  if(!link.startsWith("http")) return fAlert("To'g'ri Zoom link kiriting","err");
+  const btn = document.getElementById("addBtn");
+  btn.disabled=true; btn.textContent="Qo'shilmoqda...";
+  try{
+    const res  = await fetch(`${BASE}/api/lesson/`,{method:"POST",headers:authH(),body:JSON.stringify({name,start_time:time,link})});
+    const data = await res.json();
+    if(res.ok){
+      fAlert("Dars muvaffaqiyatli qo'shildi!","ok");
+      document.getElementById("addName").value = "";
+      document.getElementById("addLink").value = "";
+      loadStats();
+    } else {
+      fAlert(data.detail||data.name?.[0]||data.link?.[0]||"Xatolik yuz berdi","err");
+    }
+  } catch(e){ fAlert("Server bilan bog'lanib bo'lmadi","err") }
+  finally{ btn.disabled=false; btn.textContent="Dars Qo'shish" }
+}
+
+// Lists
+async function loadUpcoming(){
+  renderLoader("upcomingList");
+  try{
+    const r = await fetch(`${BASE}/api/futere/lessons/`,{headers:authH()});
+    renderLessons("upcomingList", await r.json(), "blue", false);
+  } catch(e){ renderError("upcomingList") }
+}
+async function loadHistory(){
+  renderLoader("historyList");
+  try{
+    const r = await fetch(`${BASE}/api/history/`,{headers:authH()});
+    renderLessons("historyList", await r.json(), "green", true);
+  } catch(e){ renderError("historyList") }
+}
+async function loadRecent(){
+  renderLoader("recentList");
+  try{
+    const r = await fetch(`${BASE}/api/history/`,{headers:authH()});
+    const d = await r.json();
+    renderLessons("recentList", (Array.isArray(d)?d:[]).slice(0,5), "green", true);
+  } catch(e){ renderError("recentList") }
+}
+async function loadStats(){
+  try{
+    const [h,u] = await Promise.all([
+      fetch(`${BASE}/api/history/`,{headers:authH()}).then(r=>r.json()),
+      fetch(`${BASE}/api/futere/lessons/`,{headers:authH()}).then(r=>r.json()),
+    ]);
+    const hist=Array.isArray(h)?h:[], upc=Array.isArray(u)?u:[];
+    document.getElementById("stTotal").textContent    = hist.length+upc.length;
+    document.getElementById("stDone").textContent     = hist.length;
+    document.getElementById("stUpcoming").textContent = upc.length;
+  } catch(e){}
+}
+
+function renderLoader(id){ document.getElementById(id).innerHTML='<div class="loading-row"><span class="spin"></span>Yuklanmoqda...</div>' }
+function renderError(id){ document.getElementById(id).innerHTML='<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-txt">Yuklanmadi</div></div>' }
+
+function renderLessons(id, raw, ico, isHist){
+  const el   = document.getElementById(id);
+  const list = Array.isArray(raw) ? raw : [];
+  if(!list.length){
+    el.innerHTML=`<div class="empty-state"><div class="empty-icon">${isHist?"📭":"📅"}</div><div class="empty-txt">${isHist?"Hozircha tarix yo'q":"Kelayotgan dars yo'q"}</div></div>`;
+    return;
+  }
+  list.sort((a,b)=>new Date(b.start_time)-new Date(a.start_time));
+  el.innerHTML = list.map((l,i)=>{
+    const dt   = new Date(l.start_time);
+    const date = dt.toLocaleDateString("uz-UZ",{day:"2-digit",month:"short",year:"numeric"});
+    const time = dt.toLocaleTimeString("uz-UZ",{hour:"2-digit",minute:"2-digit"});
+    const badge= l.is_opened
+      ? '<span class="chip chip-green">✓ O\'tildi</span>'
+      : '<span class="chip chip-yellow">⏳ Kutilmoqda</span>';
+    return `<div class="lcard" style="animation-delay:${i*0.05}s">
+      <div class="lc-ico ${ico}">${isHist?"✅":"📅"}</div>
+      <div class="lc-body">
+        <div class="lc-name">${l.name||"Nomsiz dars"}</div>
+        <div class="lc-meta">
+          <span class="lc-time">${date} · ${time}</span>
+          ${badge}
+          <a href="${l.link}" target="_blank" class="lc-link">${l.link}</a>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+// Init
+const now = new Date();
+now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
+document.getElementById("addTime").value = now.toISOString().slice(0,16);
+
+checkZoom();
+startTimer();
+loadStats();
+loadRecent();
+</script>
+</body>
+</html>

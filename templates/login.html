@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ZoomAuto — Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0f;
+      --surface: #111118;
+      --border: rgba(255,255,255,0.07);
+      --accent: #4f6ef7;
+      --accent2: #a78bfa;
+      --text: #f0f0f8;
+      --muted: #6b6b80;
+      --success: #34d399;
+      --error: #f87171;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+
+    .bg-scene { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+    .orb {
+      position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.18;
+      animation: drift 12s ease-in-out infinite alternate;
+    }
+    .orb-1 { width: 500px; height: 500px; background: var(--accent2); top: -120px; right: -100px; animation-duration: 13s; }
+    .orb-2 { width: 400px; height: 400px; background: var(--accent); bottom: -80px; left: -80px; animation-duration: 11s; animation-delay: -4s; }
+    .orb-3 { width: 250px; height: 250px; background: #818cf8; top: 30%; right: 20%; animation-duration: 17s; animation-delay: -9s; }
+
+    @keyframes drift {
+      from { transform: translate(0, 0) scale(1); }
+      to { transform: translate(-30px, 40px) scale(1.06); }
+    }
+
+    .grid-lines {
+      position: fixed; inset: 0; z-index: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+
+    .card-wrap {
+      position: relative; z-index: 10;
+      width: 100%; max-width: 440px; padding: 16px;
+    }
+
+    .brand {
+      text-align: center; margin-bottom: 36px;
+    }
+    .brand-logo {
+      display: inline-flex; align-items: center; gap: 10px;
+      font-family: 'Syne', sans-serif; font-weight: 800; font-size: 26px;
+    }
+    .brand-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .brand-tagline {
+      font-size: 13px; color: var(--muted); margin-top: 6px; letter-spacing: 0.05em;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px 36px;
+      box-shadow: 0 0 0 1px rgba(167,139,250,0.08), 0 40px 80px rgba(0,0,0,0.5);
+      animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .card-title {
+      font-family: 'Syne', sans-serif; font-weight: 700; font-size: 24px;
+      margin-bottom: 6px;
+    }
+    .card-sub {
+      font-size: 14px; color: var(--muted); margin-bottom: 32px;
+    }
+
+    .field { margin-bottom: 18px; }
+    .field label {
+      display: block; font-size: 12px; font-weight: 500;
+      color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .field-wrap { position: relative; }
+    .field-icon {
+      position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+      color: var(--muted); font-size: 16px; pointer-events: none;
+    }
+    .field input {
+      width: 100%;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 13px 14px 13px 42px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif; font-size: 15px;
+      outline: none;
+      transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+    }
+    .field input::placeholder { color: var(--muted); }
+    .field input:focus {
+      border-color: var(--accent2);
+      background: rgba(167,139,250,0.06);
+      box-shadow: 0 0 0 3px rgba(167,139,250,0.15);
+    }
+
+    .btn {
+      width: 100%; padding: 14px;
+      background: linear-gradient(135deg, var(--accent2), var(--accent));
+      border: none; border-radius: 12px;
+      color: #fff; font-family: 'Syne', sans-serif;
+      font-weight: 700; font-size: 15px; letter-spacing: 0.03em;
+      cursor: pointer; margin-top: 8px;
+      transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 4px 20px rgba(167,139,250,0.35);
+    }
+    .btn:hover { opacity: 0.92; transform: translateY(-1px); box-shadow: 0 8px 30px rgba(167,139,250,0.45); }
+    .btn:active { transform: translateY(0); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .btn-spinner {
+      display: none; width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff; border-radius: 50%;
+      animation: spin 0.7s linear infinite; margin: 0 auto;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .alert {
+      padding: 12px 14px; border-radius: 10px;
+      font-size: 13px; margin-bottom: 18px;
+      display: none; align-items: center; gap: 8px;
+    }
+    .alert.error { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.25); color: var(--error); display: flex; }
+    .alert.success { background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.25); color: var(--success); display: flex; }
+
+    .divider {
+      text-align: center; font-size: 13px; color: var(--muted); margin-top: 24px;
+    }
+    .divider a {
+      color: var(--accent); text-decoration: none; font-weight: 500;
+      transition: color 0.2s;
+    }
+    .divider a:hover { color: var(--accent2); }
+  </style>
+</head>
+<body>
+  <div class="bg-scene">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+  <div class="grid-lines"></div>
+
+  <div class="card-wrap">
+    <div class="brand">
+      <div class="brand-logo">
+        <div class="brand-icon">🎥</div>
+        ZoomAuto
+      </div>
+      <div class="brand-tagline">Avtomatik dars boshqaruv tizimi</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Xush kelibsiz 👋</div>
+      <div class="card-sub">Akkauntingizga kiring</div>
+
+      <div class="alert" id="alert">
+        <span id="alertIcon">⚠</span>
+        <span id="alertMsg"></span>
+      </div>
+
+      <div class="field">
+        <label>Foydalanuvchi nomi</label>
+        <div class="field-wrap">
+          <span class="field-icon">👤</span>
+          <input type="text" id="username" placeholder="username kiriting" autocomplete="off"/>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Parol</label>
+        <div class="field-wrap">
+          <span class="field-icon">🔒</span>
+          <input type="password" id="password" placeholder="parol kiriting"/>
+        </div>
+      </div>
+
+      <button class="btn" id="loginBtn" onclick="login()">
+        <span id="btnText">Sign in</span>
+        <div class="btn-spinner" id="spinner"></div>
+      </button>
+
+      <div class="divider">
+        Akkountingiz yo'qmi? <a href="register.html">Sign up</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const BASE = "http://127.0.0.1:8000";
+
+    function showAlert(msg, type = "error") {
+      const el = document.getElementById("alert");
+      el.className = "alert " + type;
+      document.getElementById("alertMsg").textContent = msg;
+      document.getElementById("alertIcon").textContent = type === "error" ? "⚠" : "✓";
+    }
+    function hideAlert() { document.getElementById("alert").className = "alert"; }
+    function setLoading(v) {
+      document.getElementById("loginBtn").disabled = v;
+      document.getElementById("btnText").style.display = v ? "none" : "block";
+      document.getElementById("spinner").style.display = v ? "block" : "none";
+    }
+
+    async function login() {
+      hideAlert();
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value;
+
+      if (!username || !password) return showAlert("Barcha maydonlarni to'ldiring");
+
+      setLoading(true);
+      try {
+        const res = await fetch(`${BASE}/user/login/`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          localStorage.setItem("access", data.access);
+          localStorage.setItem("refresh", data.refresh);
+          localStorage.setItem("username", data.username);
+          showAlert("Muvaffaqiyatli kirdingiz! Dashboard ga o'tilmoqda...", "success");
+          setTimeout(() => window.location.href = "dashboard.html", 1200);
+        } else {
+          const msg = data.detail || data.non_field_errors?.[0] || "Username yoki parol noto'g'ri";
+          showAlert(msg);
+        }
+      } catch (e) {
+        showAlert("Server bilan bog'lanib bo'lmadi");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    document.addEventListener("keydown", e => { if (e.key === "Enter") login(); });
+  </script>
+</body>
+</html>
